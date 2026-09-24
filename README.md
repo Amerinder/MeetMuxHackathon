@@ -1,118 +1,209 @@
-# English → Bhojpuri Low-Resource Neural Machine Translation (NMT)
+# English → Bhojpuri Low-Resource Neural Machine Translation
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Model: NLLB-200](https://img.shields.io/badge/Model-NLLB--200--Distilled--600M-orange)](https://huggingface.co/facebook/nllb-200-distilled-600M)
-[![Held-out BLEU](https://img.shields.io/badge/Held--out%20BLEU-7.30-brightgreen)](results/bleu.txt)
-
-A reproducible, low-resource Neural Machine Translation system adapting a pretrained multilingual Seq2Seq Transformer (`facebook/nllb-200-distilled-600M`) to translate English sentences into Bhojpuri (`eng_Latn` $\rightarrow$ `bho_Deva`).
+A lightweight, reproducible neural machine translation (NMT) system that translates English sentences into Bhojpuri using subword tokenization, a pretrained multilingual sequence-to-sequence Transformer, held-out BLEU evaluation, and an interactive Gradio user interface.
 
 ---
 
-## 1. Project Architecture
+## 1. Problem Statement
 
-```
-English Source Text (Latin Script)
-                │
-                ▼
-SentencePiece BPE Tokenization (eng_Latn)
-                │
-                ▼
-Pretrained Seq2Seq Transformer (NLLB-200 Distilled 600M)
-                │
-         [Cross-Attention]
-                │
-                ▼
-Autoregressive Decoder & Beam Search (forced_bos_token = bho_Deva)
-                │
-                ▼
-Bhojpuri Output (Devanagari Script)
-```
+Bhojpuri is a regional Indo-Aryan language spoken by over 50 million people, primarily in northern India and the Terai region of Nepal. Despite having a substantial speaker base, Bhojpuri is digitally low-resource:
+- Parallel English–Bhojpuri digital corpora are scarce and noisy compared to high-resource languages like Hindi, French, or German.
+- Existing general-purpose translation services often lack support for or perform poorly on regional dialects and colloquial Bhojpuri expressions.
+- Training large neural machine translation models from scratch on low-resource language pairs often leads to overfitting and poor generalization.
 
 ---
 
-## 2. Dataset & Preprocessing
+## 2. Project Objective
 
-- **Dataset Source**: [`nilayshenai/English-Bhojpuri_Translation_Dataset`](https://huggingface.co/datasets/nilayshenai/English-Bhojpuri_Translation_Dataset)
-- **Raw Sentences**: 28,999 parallel pairs
-- **Cleaned Dataset**: 28,571 verified pairs (after deduplication, whitespace normalization, and script validation)
-- **Splits**:
-  - `data/train.csv` (22,856 pairs — 80%)
-  - `data/val.csv` (2,857 pairs — 10%)
-  - `data/test.csv` (2,858 pairs — 10% held-out)
-  - `data/train_2k.csv` (2,000 pairs — fast low-resource benchmark)
+The objective of this project is to develop an efficient, reproducible English-to-Bhojpuri neural machine translation pipeline by:
+1. Adapting a pretrained multilingual Seq2Seq Transformer (e.g., IndicBART / mBART / NLLB) rather than training from scratch.
+2. Utilizing subword tokenization (SentencePiece/BPE) to represent rare and agglutinated dialectal terms.
+3. Evaluating translation quality rigorously on a fixed, held-out test split using standard corpus-level BLEU.
+4. Exposing the system via an interactive, lightweight Gradio web interface for direct user demonstration.
 
 ---
 
-## 3. Benchmark Results
+## 3. System Architecture
 
-Evaluated on 200 held-out test sentence pairs using SacreBLEU:
-
-| Metric | Score | Configuration |
-| :--- | :--- | :--- |
-| **Corpus BLEU** | **7.30** | SacreBLEU (Beam Search, `num_beams=4`) |
-| **Training Pairs** | 2,000 | Low-resource benchmark subset |
-| **Epochs** | 3 | AdamW (lr=3e-5, FP16 AMP) |
-
-### Sample Translations
-| English Source | Reference Bhojpuri | Model Prediction |
-| :--- | :--- | :--- |
-| *Hello, how are you?* | हैलो, रउआ कइसन बानी? | **हैलो, तू कइसे हव?** |
-| *Where are you going today?* | आजु कहवाँ जा रहल बानी? | **तू आज कहवाँ जात हउअ?** |
-| *May I sit on my bench?* | बेंच पे हम बइठ सकी ल। | **का हम आपन बेंच पर बइठ सकत हईं?** |
-| *The foreman says you have to work tonight!* | परबंधक क कहल हव की आपको काम करय के हव। | **नौकमेन कहत हव कि तोहके आज रात काम करे के हव।** |
-| *I want to learn Bhojpuri language.* | हमके भोजपुरी भाषा सीखे के बा। | **हम भोजपुरी भाषा सीखे चाहत हईं।** |
-
----
-
-## 4. Repository Structure
-
-```
-MeetMux/
-├── data/
-│   ├── README.md              # Dataset stats & cleaning details
-│   ├── cleaned.csv            # Cleaned, aligned dataset (28,571 pairs)
-│   ├── train.csv              # 80% train split
-│   ├── val.csv                # 10% validation split
-│   ├── test.csv               # 10% held-out test split
-│   └── train_2k.csv           # 2,000 pair benchmark subset
-├── notebooks/
-│   ├── 01_data_check.ipynb    # Step 1 & 2 inspection notebook
-│   └── 02_train.ipynb         # Step 4-8 Google Colab training notebook
-├── src/
-│   ├── data_preprocessing.py  # Cleaning & alignment script
-│   ├── split_data.py          # Reproducible split generator
-│   ├── tokenizer_utils.py     # SentencePiece BPE tokenizer inspection
-│   ├── train.py               # Standalone fine-tuning script
-│   ├── translate.py           # translate(text) -> str inference hook
-│   └── evaluate.py            # SacreBLEU test-set evaluator
-├── models/
-│   └── README.md              # Architecture documentation & judge Q&A
-├── results/
-│   ├── bleu.txt               # Recorded BLEU benchmark (7.30)
-│   └── sample_translations.csv# Reference vs. Predicted test outputs
-├── requirements.txt           # Project dependencies
-└── README.md                  # Main documentation
+```text
+       English Input Sentence
+                 │
+                 ▼
+      Subword Tokenization (BPE/SentencePiece)
+                 │
+                 ▼
+ Pretrained Multilingual Seq2Seq Transformer Encoder
+                 │
+                 ▼
+ Cross-Attention Mechanism & Autoregressive Decoder
+                 │
+                 ▼
+        Bhojpuri Target Text
+          ┌──────┴──────┐
+          ▼             ▼
+   Corpus BLEU      Gradio UI
+   Evaluation       Interactive Demo
 ```
 
+### Key Technical Mechanisms
+- **Subword Tokenization**: Breaks words into morphological subwords and characters, drastically alleviating out-of-vocabulary (OOV) issues when handling rare Bhojpuri terms.
+- **Multilingual Knowledge Transfer**: Leverages cross-lingual representations from related Indo-Aryan languages (such as Hindi and Bengali) encoded in pretrained multilingual weights.
+- **Attention Mechanism**: Allows the decoder to dynamically attend to relevant source words during sequence generation.
+
 ---
 
-## 5. Quickstart
+## 4. Technology Stack
 
-### Installation
+| Component | Tool / Library |
+| :--- | :--- |
+| **Language** | Python 3.10+ |
+| **Deep Learning** | PyTorch |
+| **Model & Tokenizer** | Hugging Face Transformers |
+| **Dataset Processing** | Hugging Face Datasets / pandas |
+| **Evaluation Metric** | SacreBLEU / Hugging Face Evaluate |
+| **User Interface** | Gradio |
+| **Version Control** | Git + GitHub |
+
+---
+
+## 5. Dataset
+
+- **Language Pair**: English (`en`) → Bhojpuri (`bho`)
+- **Corpus Source**: Curated English–Bhojpuri parallel text corpora (e.g., AI4Bharat / Samanantar / Tatoeba / PMIndia subsets).
+- **Preprocessing**: Whitespace normalization, duplicate and empty row removal, sentence alignment verification.
+- **Data Splits**: Fixed, reproducible random split (recommended 80% Train, 10% Validation, 10% Held-out Test).
+- **License**: Refer to the upstream dataset distribution guidelines (e.g., CC-BY-4.0 / Open Data Commons).
+
+---
+
+## 6. Installation & Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone <REPO_URL>
+   cd Meetmux
+   ```
+
+2. **Create and activate a virtual environment (recommended)**:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On Linux/macOS:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## 7. Running the Application
+
+Launch the interactive Gradio translation interface:
 ```bash
-pip install -r requirements.txt
+python src/app.py
 ```
 
-### Run Inference
-```python
-from src.translate import translate
-
-print(translate("Hello, how are you?"))
-# Output: हैलो, तू कइसे हव?
+The application will start locally at:
+```text
+http://127.0.0.1:7860/
 ```
 
-### Run Evaluation
-```bash
-python src/evaluate.py --test_path data/test.csv --sample_size 200
+### Application Features:
+- **Clean Input/Output**: English text input box, single-click "Translate" button, and read-only Bhojpuri translation display.
+- **Model Info & Status**: Real-time display of model architecture status and checkpoint availability.
+- **BLEU Score Panel**: Dynamically displays the held-out evaluation BLEU score from `results/bleu.txt`.
+- **Preloaded Test Sentences**: Quick-access examples to test unseen sentences instantly.
+- **Decoupled Architecture**: Model loading and inference (`translate_text`) are completely decoupled from UI layout code.
+
+---
+
+## 8. Training & Evaluation Pipeline
+
+### Model Fine-Tuning (Member 1)
+- Managed by `src/train.py` and exploratory notebooks `notebooks/01_data_check.ipynb` and `notebooks/02_train.ipynb`.
+- Fine-tunes the multilingual Seq2Seq model on the cleaned English–Bhojpuri parallel training set.
+- Checkpoints and tokenizer configurations are saved to `models/`.
+
+### Inference (`src/translate.py`)
+- Provides a clean `translate(text: str) -> str` interface called directly by the Gradio application.
+
+### Evaluation (`src/evaluate.py`)
+```text
+Held-Out Test Set ──> Model Inference ──> SacreBLEU ──> results/bleu.txt
 ```
+- Evaluated on a strictly held-out test split never seen during training or validation.
+- Output metrics are saved to `results/bleu.txt`.
+
+---
+
+## 9. Evaluation Results & Sample Translations
+
+### BLEU Score
+Evaluated on 200 held-out test sentences using SacreBLEU:
+- **Model**: `facebook/nllb-200-distilled-600M`
+- **Language Direction**: English (`eng_Latn`) → Bhojpuri (`bho_Deva`)
+- **Corpus BLEU**: **`7.30`**
+- **Test Set Size**: 200 sentence pairs
+- **Metric File**: [`results/bleu.txt`](file:///c:/Users/Lenovo/OneDrive/Desktop/Meetmux/results/bleu.txt)
+
+---
+
+### Sample Translations (10+ High-Quality Examples)
+Evaluated directly from the held-out test split ([`results/sample_translations.csv`](file:///c:/Users/Lenovo/OneDrive/Desktop/Meetmux/results/sample_translations.csv)):
+
+| # | English Source | Human Reference (Bhojpuri) | Model Prediction (`nllb-200`) |
+| :-: | :--- | :--- | :--- |
+| 1 | *What do you mean?* | का मतलब | का मतलब हव? |
+| 2 | *How can I help you?* | हम कइसे तोहार मदद कई सकीऽल। | हम तोहार कइसे मदद कइ सकत हईं? |
+| 3 | *You're right.* | आप सही हवँ। | तु सही हउअ। |
+| 4 | *You're doing good.* | तूँ अच्छा करत हवा। | तु अच्छा करत हउअ। |
+| 5 | *Teach me swimming.* | हमके तैरब सिखाऽव। | हमके तैरना सिखावा। |
+| 6 | *Will you start a school?* | का तु एक स्कूल शूरु करब ? | का तु स्कूल शुरू कईब? |
+| 7 | *Father, do not do it, I beseech you!* | पिताजी अइसन जानि करा, हम तुहसे बिनती करत हईं | पिताजी, अइसन मत करा, हम तोहसे बिनती करत हईं। |
+| 8 | *I bought a new car.* | हम नया कार खरीद लेहलीं। | हम एगो नई कार खरीदलीं। |
+| 9 | *I want to spend my life with her...* | हम चाहत हईं ओकरे संहे आपन जीवन बितावल.... | हम ओकरे साथ आपन जीवन बितावे चाहत हईं। |
+| 10 | *My father is a university professor.* | हमार बाउजी विश्वविद्यालय में प्रोफेसर हवें। | हमार पिताजी विश्वविद्यालय के प्रोफेसर हऽ। |
+| 11 | *Because the soup was too cold, I warmed it in the microwave.* | काहे की सूप बहुत ठंडा रहल हम माइक्रोबेब मे यहके हम गरम कइनी । | चूंकि सूप बहुत ठंडा रहे, हम माइक्रोवेव में गरम कइलीं। |
+| 12 | *The book is very interesting.* | किताब बहुत रोचक ह । | किताब बहुते रोचक हऽ। |
+
+---
+
+### Error Analysis (Imperfect Examples)
+Critical examination of translation failures on the held-out test set:
+
+| # | English Source | Human Reference | Model Prediction | Linguistic Issue |
+| :-: | :--- | :--- | :--- | :--- |
+| 1 | *Kick that old man's ass!* | ओ बूढ़ मनई क लात! | ओ बुढ़ऊ के गधे में टक्कर द। | **Literal Idiom Translation**: The vulgar/slang idiom was translated literally into "गधे" (donkey). |
+| 2 | *You switched off the lights.* | तु बिजली बुता द् । | तु लाइट बंद कइ दिहला। | **Dialect vs Loanword**: Employs borrowed English loanwords ("लाइट बंद") rather than dialectal idiom ("बुता देहल"). |
+| 3 | *When does the cock crow?* | जब कौउवा काव काव करत ह । | मुर्गा कब मुरगावेला? | **Morphological Neologism**: The model derived an anomalous verb form ("मुरगावेला") instead of standard crowing terms. |
+| 4 | *All he needed was a suit and tie and a jiggly hula gal...* | अउर एंडी के बस जरूरत रहल सूटअउट टाई क... | उनकर जरूरत बस एगो सूट और टाई... अगर तु प्लीज। | **Complex Multi-Clause Awkwardness**: Degrades on long literary clauses, leaving phrases like "if you please" transliterated verbatim. |
+
+---
+
+## 10. Limitations & Future Work
+
+1. **Data Scarcity**: Low-resource parallel datasets limit domain diversity; vocabulary outside common conversational patterns may yield sub-optimal outputs.
+2. **Spelling & Dialectal Variation**: Bhojpuri possesses regional colloquial variants (e.g., Western vs. Eastern Bhojpuri) that lack standardized digital orthography.
+3. **Metric Limitations**: BLEU measures surface n-gram overlap and may penalize semantically valid synonymous expressions common in regional languages.
+4. **Future Extensions**: Back-translation from monolingual Bhojpuri corpora, integration of human-in-the-loop evaluation, and expanding to Bhojpuri speech synthesis.
+
+---
+
+## 11. Team Contributions
+
+- **Member 1 (ML / NLP)**:
+  - Dataset acquisition, cleaning, filtering, and splitting.
+  - Pretrained Seq2Seq Transformer setup and tokenizer configuration.
+  - Model fine-tuning, hyperparameter optimization, and checkpoint persistence.
+  - Inference function implementation (`src/translate.py`) and held-out BLEU evaluation (`src/evaluate.py`).
+
+- **Member 2 (Gradio UI / Evaluation / Integration / Documentation)**:
+  - Interactive Gradio translation interface (`src/app.py`).
+  - Decoupled model loading, fallback handling, and UI test-sentence integration.
+  - Evaluation results presentation and dynamic BLEU display.
+  - Results structure (`results/bleu.txt`, `results/sample_translations.csv`).
+  - Comprehensive documentation, requirements specification, and system verification.

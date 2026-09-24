@@ -30,3 +30,9 @@ data/raw/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local task sheets and scratch files
+Member_2_Work.md
+workflow.pdf
+evaluation_results/
+
