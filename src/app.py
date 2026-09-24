@@ -479,7 +479,7 @@ button#clear_btn:hover {
   background: #F0FDFA !important;
 }
 
-/* High-Contrast Table Inside Accordion */
+/* High-Contrast Crisp White Table Inside Accordion */
 .stitch-accordion {
   border: 1.5px solid #CBD5E1 !important;
   border-radius: 12px !important;
@@ -487,23 +487,104 @@ button#clear_btn:hover {
   margin-top: 20px !important;
   overflow: hidden !important;
 }
-.stitch-accordion > .label-wrap {
+.stitch-accordion > .label-wrap, .stitch-accordion summary {
   background: #F1F5F9 !important;
   padding: 12px 16px !important;
   border-bottom: 1px solid #E2E8F0 !important;
-}
-.stitch-accordion span, .stitch-accordion summary {
   color: #0F172A !important;
   font-weight: 700 !important;
   font-size: 15px !important;
 }
-.table-wrap, table {
+.stitch-accordion span {
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+/* Force Table & Dataframe Container to Crisp White */
+.stitch-accordion .gr-dataframe,
+.stitch-accordion .dataframe,
+.stitch-accordion [data-testid="dataframe"],
+.stitch-accordion .table-wrap,
+.stitch-accordion table,
+.stitch-accordion tbody,
+.stitch-accordion tr,
+.stitch-accordion td,
+.stitch-accordion .cell-wrap,
+.stitch-accordion [class*="cell"],
+.stitch-accordion [class*="table"] {
+  background-color: #FFFFFF !important;
   background: #FFFFFF !important;
   color: #0F172A !important;
-  border-collapse: collapse !important;
-  width: 100% !important;
+  border-color: #E2E8F0 !important;
 }
-thead, thead tr, thead th, table th {
+
+/* Gradio's Dataframe uses a virtualized grid in newer releases, rather than
+   ordinary table cells. Override its theme variables and grid descendants. */
+.stitch-accordion [data-testid="dataframe"] {
+  color-scheme: light !important;
+  --table-even-background-fill: #FFFFFF !important;
+  --table-odd-background-fill: #F8FAFC !important;
+  --table-header-background-fill: #E2E8F0 !important;
+  --table-header-text-color: #0F172A !important;
+  --table-row-focus: #E2E8F0 !important;
+  --table-border-color: #CBD5E1 !important;
+  --background-fill-primary: #FFFFFF !important;
+  --background-fill-secondary: #F8FAFC !important;
+  --body-text-color: #1E293B !important;
+  --block-background-fill: #FFFFFF !important;
+  --border-color-primary: #E2E8F0 !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+}
+.verified-translations-table,
+.verified-translations-table > *,
+.verified-translations-table [data-testid="dataframe"] {
+  color-scheme: light !important;
+  --table-even-background-fill: #FFFFFF !important;
+  --table-odd-background-fill: #F8FAFC !important;
+  --table-header-background-fill: #E2E8F0 !important;
+  --table-header-text-color: #0F172A !important;
+  --table-row-focus: #E2E8F0 !important;
+  --table-border-color: #CBD5E1 !important;
+  --background-fill-primary: #FFFFFF !important;
+  --background-fill-secondary: #F8FAFC !important;
+  --body-text-color: #1E293B !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+}
+.verified-translations-table * {
+  color: #1E293B !important;
+}
+.verified-translations-table th,
+.verified-translations-table [role="columnheader"] {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+.stitch-accordion [data-testid="dataframe"] [role="grid"],
+.stitch-accordion [data-testid="dataframe"] [role="row"],
+.stitch-accordion [data-testid="dataframe"] [role="gridcell"],
+.stitch-accordion [data-testid="dataframe"] [role="columnheader"],
+.stitch-accordion [data-testid="dataframe"] [class*="table"],
+.stitch-accordion [data-testid="dataframe"] [class*="cell"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  border-color: #E2E8F0 !important;
+}
+.stitch-accordion [data-testid="dataframe"] [role="columnheader"] {
+  background-color: #F1F5F9 !important;
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+/* Header Row */
+.stitch-accordion thead,
+.stitch-accordion thead tr,
+.stitch-accordion thead th,
+.stitch-accordion table th,
+.stitch-accordion [class*="header"] {
+  background-color: #F8FAFC !important;
   background: #F8FAFC !important;
   color: #0F172A !important;
   font-weight: 700 !important;
@@ -511,15 +592,22 @@ thead, thead tr, thead th, table th {
   padding: 10px 14px !important;
   font-size: 13px !important;
 }
-tbody td, table td {
-  background: #FFFFFF !important;
+
+/* Data Cells */
+.stitch-accordion tbody td,
+.stitch-accordion table td,
+.stitch-accordion .cell-wrap span,
+.stitch-accordion td * {
   color: #1E293B !important;
-  border-bottom: 1px solid #E2E8F0 !important;
-  padding: 10px 14px !important;
   font-size: 14px !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid #E2E8F0 !important;
 }
-tbody tr:hover td {
-  background: #F8FAFC !important;
+
+.stitch-accordion tbody tr:hover td,
+.stitch-accordion tbody tr:hover {
+  background-color: #F1F5F9 !important;
+  background: #F1F5F9 !important;
 }
 """
 
@@ -643,6 +731,7 @@ def build_app():
                     headers=["English Source", "Reference Bhojpuri", "AI Translation"],
                     interactive=False,
                     wrap=True,
+                    elem_classes=["verified-translations-table"],
                 )
 
         # Wire event handlers
