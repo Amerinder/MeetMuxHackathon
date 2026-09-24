@@ -1,17 +1,3 @@
----
-title: MeetMux Bhojpuri Translator
-emoji: 🌐
-colorFrom: green
-colorTo: blue
-sdk: gradio
-sdk_version: 6.28.0
-python_version: "3.10"
-app_file: src/app.py
-pinned: false
----
-
-# MeetMux: English–Bhojpuri Translator
-
 MeetMux is a low-resource machine translation project for English and Bhojpuri. It brings together a cleaned parallel corpus, an NLLB fine-tuning and evaluation workflow, and a Gradio web app.
 
 [Open the live demo](https://amerinder-meetmux-bhojpuri-translator.hf.space) · [View the GitHub repository](https://github.com/Amerinder/MeetMuxHackathon)
