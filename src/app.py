@@ -6,8 +6,16 @@ Commercial Production Theme: 'Academic Showcase' (Market-Ready & Polished)
 
 import os
 import sys
+import html
 from pathlib import Path
 import gradio as gr
+import spaces
+
+
+@spaces.GPU
+def _zerogpu_compatibility_handler():
+    """Register a ZeroGPU handler without allocating GPU for this CPU demo."""
+    return None
 
 # Ensure workspace root is in python path
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -273,6 +281,30 @@ def load_sample_translations_table(num_rows: int = 12):
             pass
     return None
 
+
+def render_sample_translations_table(df):
+    """Render verified samples with inline light colors independent of theme CSS."""
+    headers = ["English Source", "Reference Bhojpuri", "AI Translation"]
+    header_html = "".join(
+        f'<th style="background:#F1F5F9;color:#0F172A;text-align:left;'
+        f'padding:10px 14px;border:1px solid #CBD5E1;font-weight:700">{html.escape(label)}</th>'
+        for label in headers
+    )
+    rows_html = []
+    for row_index, row in enumerate(df.itertuples(index=False, name=None)):
+        bg = "#F8FAFC" if row_index % 2 else "#FFFFFF"
+        cells = "".join(
+            f'<td style="background:{bg};color:#1E293B;padding:10px 14px;'
+            f'border:1px solid #E2E8F0">{html.escape(str(value))}</td>'
+            for value in row
+        )
+        rows_html.append(f"<tr>{cells}</tr>")
+    return (
+        '<div style="overflow-x:auto;background:#FFFFFF;color:#1E293B">'
+        '<table style="width:100%;border-collapse:collapse;background:#FFFFFF;color:#1E293B">'
+        f"<thead><tr>{header_html}</tr></thead><tbody>{''.join(rows_html)}</tbody></table></div>"
+    )
+
 # ==========================================
 # 3. Market-Ready Commercial Styling
 # ==========================================
@@ -479,7 +511,7 @@ button#clear_btn:hover {
   background: #F0FDFA !important;
 }
 
-/* High-Contrast Table Inside Accordion */
+/* High-Contrast Crisp White Table Inside Accordion */
 .stitch-accordion {
   border: 1.5px solid #CBD5E1 !important;
   border-radius: 12px !important;
@@ -487,23 +519,104 @@ button#clear_btn:hover {
   margin-top: 20px !important;
   overflow: hidden !important;
 }
-.stitch-accordion > .label-wrap {
+.stitch-accordion > .label-wrap, .stitch-accordion summary {
   background: #F1F5F9 !important;
   padding: 12px 16px !important;
   border-bottom: 1px solid #E2E8F0 !important;
-}
-.stitch-accordion span, .stitch-accordion summary {
   color: #0F172A !important;
   font-weight: 700 !important;
   font-size: 15px !important;
 }
-.table-wrap, table {
+.stitch-accordion span {
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+/* Force Table & Dataframe Container to Crisp White */
+.stitch-accordion .gr-dataframe,
+.stitch-accordion .dataframe,
+.stitch-accordion [data-testid="dataframe"],
+.stitch-accordion .table-wrap,
+.stitch-accordion table,
+.stitch-accordion tbody,
+.stitch-accordion tr,
+.stitch-accordion td,
+.stitch-accordion .cell-wrap,
+.stitch-accordion [class*="cell"],
+.stitch-accordion [class*="table"] {
+  background-color: #FFFFFF !important;
   background: #FFFFFF !important;
   color: #0F172A !important;
-  border-collapse: collapse !important;
-  width: 100% !important;
+  border-color: #E2E8F0 !important;
 }
-thead, thead tr, thead th, table th {
+
+/* Gradio's Dataframe uses a virtualized grid in newer releases, rather than
+   ordinary table cells. Override its theme variables and grid descendants. */
+.stitch-accordion [data-testid="dataframe"] {
+  color-scheme: light !important;
+  --table-even-background-fill: #FFFFFF !important;
+  --table-odd-background-fill: #F8FAFC !important;
+  --table-header-background-fill: #E2E8F0 !important;
+  --table-header-text-color: #0F172A !important;
+  --table-row-focus: #E2E8F0 !important;
+  --table-border-color: #CBD5E1 !important;
+  --background-fill-primary: #FFFFFF !important;
+  --background-fill-secondary: #F8FAFC !important;
+  --body-text-color: #1E293B !important;
+  --block-background-fill: #FFFFFF !important;
+  --border-color-primary: #E2E8F0 !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+}
+.verified-translations-table,
+.verified-translations-table > *,
+.verified-translations-table [data-testid="dataframe"] {
+  color-scheme: light !important;
+  --table-even-background-fill: #FFFFFF !important;
+  --table-odd-background-fill: #F8FAFC !important;
+  --table-header-background-fill: #E2E8F0 !important;
+  --table-header-text-color: #0F172A !important;
+  --table-row-focus: #E2E8F0 !important;
+  --table-border-color: #CBD5E1 !important;
+  --background-fill-primary: #FFFFFF !important;
+  --background-fill-secondary: #F8FAFC !important;
+  --body-text-color: #1E293B !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+}
+.verified-translations-table * {
+  color: #1E293B !important;
+}
+.verified-translations-table th,
+.verified-translations-table [role="columnheader"] {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+.stitch-accordion [data-testid="dataframe"] [role="grid"],
+.stitch-accordion [data-testid="dataframe"] [role="row"],
+.stitch-accordion [data-testid="dataframe"] [role="gridcell"],
+.stitch-accordion [data-testid="dataframe"] [role="columnheader"],
+.stitch-accordion [data-testid="dataframe"] [class*="table"],
+.stitch-accordion [data-testid="dataframe"] [class*="cell"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  border-color: #E2E8F0 !important;
+}
+.stitch-accordion [data-testid="dataframe"] [role="columnheader"] {
+  background-color: #F1F5F9 !important;
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+/* Header Row */
+.stitch-accordion thead,
+.stitch-accordion thead tr,
+.stitch-accordion thead th,
+.stitch-accordion table th,
+.stitch-accordion [class*="header"] {
+  background-color: #F8FAFC !important;
   background: #F8FAFC !important;
   color: #0F172A !important;
   font-weight: 700 !important;
@@ -511,14 +624,48 @@ thead, thead tr, thead th, table th {
   padding: 10px 14px !important;
   font-size: 13px !important;
 }
-tbody td, table td {
+
+/* Data Cells */
+.stitch-accordion tbody td,
+.stitch-accordion table td,
+.stitch-accordion .cell-wrap span,
+.stitch-accordion td * {
+  color: #1E293B !important;
+  font-size: 14px !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.stitch-accordion tbody tr:hover td,
+.stitch-accordion tbody tr:hover {
+  background-color: #F1F5F9 !important;
+  background: #F1F5F9 !important;
+}
+
+/* Static verified samples use plain HTML so Gradio's Dataframe theme cannot
+   apply dark row colors. */
+.stitch-accordion .verified-sample-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
   background: #FFFFFF !important;
   color: #1E293B !important;
-  border-bottom: 1px solid #E2E8F0 !important;
+}
+.stitch-accordion .verified-sample-table thead th {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  text-align: left !important;
+  font-weight: 700 !important;
   padding: 10px 14px !important;
+  border: 1px solid #E2E8F0 !important;
+}
+.stitch-accordion .verified-sample-table tbody td {
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  padding: 10px 14px !important;
+  border: 1px solid #E2E8F0 !important;
   font-size: 14px !important;
 }
-tbody tr:hover td {
+.stitch-accordion .verified-sample-table tbody tr:nth-child(even) td {
   background: #F8FAFC !important;
 }
 """
@@ -638,11 +785,8 @@ def build_app():
         sample_df = load_sample_translations_table(12)
         if sample_df is not None:
             with gr.Accordion("Verified Sample Translations", open=False, elem_classes=["stitch-accordion"]):
-                gr.Dataframe(
-                    value=sample_df,
-                    headers=["English Source", "Reference Bhojpuri", "AI Translation"],
-                    interactive=False,
-                    wrap=True,
+                gr.HTML(
+                    value=render_sample_translations_table(sample_df)
                 )
 
         # Wire event handlers
@@ -667,4 +811,4 @@ def build_app():
 demo = build_app()
 
 if __name__ == "__main__":
-    demo.launch(server_name="127.0.0.1", server_port=7860, theme=gr.themes.Default(primary_hue="teal"), share=False)
+    demo.launch(server_name="0.0.0.0", server_port=7860, theme=gr.themes.Default(primary_hue="teal"), share=False)
