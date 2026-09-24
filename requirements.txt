@@ -1,3 +1,4 @@
 # Runtime dependencies for the Gradio app and Hugging Face Space.
 gradio==6.28.0
 pandas>=2.0.0,<4.0.0
+spaces>=0.37.0

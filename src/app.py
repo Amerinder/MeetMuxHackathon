@@ -9,6 +9,13 @@ import sys
 import html
 from pathlib import Path
 import gradio as gr
+import spaces
+
+
+@spaces.GPU
+def _zerogpu_compatibility_handler():
+    """Register a ZeroGPU handler without allocating GPU for this CPU demo."""
+    return None
 
 # Ensure workspace root is in python path
 ROOT_DIR = Path(__file__).resolve().parent.parent
