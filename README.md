@@ -1,7 +1,7 @@
 ---
 title: MeetMux Bhojpuri Translator
 emoji: 🌐
-colorFrom: teal
+colorFrom: green
 colorTo: blue
 sdk: gradio
 sdk_version: 6.28.0
