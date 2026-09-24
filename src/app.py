@@ -545,7 +545,7 @@ def build_app():
 
         # Top Hero Header (Commercial Branding - No Emojis, No Academic Jargon)
         gr.HTML(
-            f"""
+            """
             <div class="stitch-hero-wrapper">
               <div class="stitch-header-row">
                 <div>
@@ -553,12 +553,6 @@ def build_app():
                   <div class="stitch-subtitle">
                     Professional neural translation from English to Bhojpuri — Fast, accurate, and culturally attuned.
                   </div>
-                </div>
-                <div>
-                  <span class="stitch-badge">
-                    <span class="stitch-dot"></span>
-                    {_model_status_msg}
-                  </span>
                 </div>
               </div>
             </div>
