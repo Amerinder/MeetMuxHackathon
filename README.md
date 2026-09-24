@@ -1,3 +1,15 @@
+---
+title: MeetMux Bhojpuri Translator
+emoji: 🌐
+colorFrom: teal
+colorTo: blue
+sdk: gradio
+sdk_version: 6.28.0
+python_version: "3.10"
+app_file: src/app.py
+pinned: false
+---
+
 # English → Bhojpuri Low-Resource Neural Machine Translation
 
 A lightweight, reproducible neural machine translation (NMT) system that translates English sentences into Bhojpuri using subword tokenization, a pretrained multilingual sequence-to-sequence Transformer, held-out BLEU evaluation, and an interactive Gradio user interface.
@@ -81,7 +93,7 @@ The objective of this project is to develop an efficient, reproducible English-t
 1. **Clone the repository**:
    ```bash
    git clone <REPO_URL>
-   cd Meetmux
+   cd MeetMux
    ```
 
 2. **Create and activate a virtual environment (recommended)**:
@@ -96,6 +108,9 @@ The objective of this project is to develop an efficient, reproducible English-t
 3. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
+
+   # For training and evaluation tools, install the additional dependencies:
+   pip install -r requirements-training.txt
    ```
 
 ---
@@ -148,12 +163,12 @@ Evaluated on 200 held-out test sentences using SacreBLEU:
 - **Language Direction**: English (`eng_Latn`) → Bhojpuri (`bho_Deva`)
 - **Corpus BLEU**: **`7.30`**
 - **Test Set Size**: 200 sentence pairs
-- **Metric File**: [`results/bleu.txt`](file:///c:/Users/Lenovo/OneDrive/Desktop/Meetmux/results/bleu.txt)
+- **Metric File**: [`results/bleu.txt`](results/bleu.txt)
 
 ---
 
 ### Sample Translations (10+ High-Quality Examples)
-Evaluated directly from the held-out test split ([`results/sample_translations.csv`](file:///c:/Users/Lenovo/OneDrive/Desktop/Meetmux/results/sample_translations.csv)):
+Evaluated directly from the held-out test split ([`results/sample_translations.csv`](results/sample_translations.csv)):
 
 | # | English Source | Human Reference (Bhojpuri) | Model Prediction (`nllb-200`) |
 | :-: | :--- | :--- | :--- |
