@@ -1,0 +1,10 @@
+Model: facebook/nllb-200-distilled-600M (Fine-tuned on English-Bhojpuri)
+Test Samples: 200 held-out sentence pairs
+Corpus BLEU: 7.30
+Training Corpus: 2,000 parallel pairs (Low-Resource Benchmark)
+Validation Set: 500 pairs
+Epochs: 3
+Optimizer: AdamW (lr=3e-5)
+Precision: FP16 (AMP)
+Decoding: Beam Search (num_beams=4)
+Date: 2026-09-24
