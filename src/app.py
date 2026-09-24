@@ -6,6 +6,7 @@ Commercial Production Theme: 'Academic Showcase' (Market-Ready & Polished)
 
 import os
 import sys
+import html
 from pathlib import Path
 import gradio as gr
 
@@ -272,6 +273,30 @@ def load_sample_translations_table(num_rows: int = 12):
         except Exception:
             pass
     return None
+
+
+def render_sample_translations_table(df):
+    """Render verified samples with inline light colors independent of theme CSS."""
+    headers = ["English Source", "Reference Bhojpuri", "AI Translation"]
+    header_html = "".join(
+        f'<th style="background:#F1F5F9;color:#0F172A;text-align:left;'
+        f'padding:10px 14px;border:1px solid #CBD5E1;font-weight:700">{html.escape(label)}</th>'
+        for label in headers
+    )
+    rows_html = []
+    for row_index, row in enumerate(df.itertuples(index=False, name=None)):
+        bg = "#F8FAFC" if row_index % 2 else "#FFFFFF"
+        cells = "".join(
+            f'<td style="background:{bg};color:#1E293B;padding:10px 14px;'
+            f'border:1px solid #E2E8F0">{html.escape(str(value))}</td>'
+            for value in row
+        )
+        rows_html.append(f"<tr>{cells}</tr>")
+    return (
+        '<div style="overflow-x:auto;background:#FFFFFF;color:#1E293B">'
+        '<table style="width:100%;border-collapse:collapse;background:#FFFFFF;color:#1E293B">'
+        f"<thead><tr>{header_html}</tr></thead><tbody>{''.join(rows_html)}</tbody></table></div>"
+    )
 
 # ==========================================
 # 3. Market-Ready Commercial Styling
@@ -609,6 +634,33 @@ button#clear_btn:hover {
   background-color: #F1F5F9 !important;
   background: #F1F5F9 !important;
 }
+
+/* Static verified samples use plain HTML so Gradio's Dataframe theme cannot
+   apply dark row colors. */
+.stitch-accordion .verified-sample-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+}
+.stitch-accordion .verified-sample-table thead th {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  text-align: left !important;
+  font-weight: 700 !important;
+  padding: 10px 14px !important;
+  border: 1px solid #E2E8F0 !important;
+}
+.stitch-accordion .verified-sample-table tbody td {
+  background: #FFFFFF !important;
+  color: #1E293B !important;
+  padding: 10px 14px !important;
+  border: 1px solid #E2E8F0 !important;
+  font-size: 14px !important;
+}
+.stitch-accordion .verified-sample-table tbody tr:nth-child(even) td {
+  background: #F8FAFC !important;
+}
 """
 
 SAMPLE_EXAMPLES = [
@@ -726,12 +778,8 @@ def build_app():
         sample_df = load_sample_translations_table(12)
         if sample_df is not None:
             with gr.Accordion("Verified Sample Translations", open=False, elem_classes=["stitch-accordion"]):
-                gr.Dataframe(
-                    value=sample_df,
-                    headers=["English Source", "Reference Bhojpuri", "AI Translation"],
-                    interactive=False,
-                    wrap=True,
-                    elem_classes=["verified-translations-table"],
+                gr.HTML(
+                    value=render_sample_translations_table(sample_df)
                 )
 
         # Wire event handlers
